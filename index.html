@@ -128,6 +128,10 @@ tr.sum td{font-weight:900;background:#FFF4EC}
 .recon td{text-align:center}
 .recon td:first-child{text-align:left}
 .recon th .sm{display:block;font-weight:400;font-size:13px}
+/* 首欄（分社／日期）固定窄寬，數字欄緊跟在旁邊 */
+.recon{table-layout:fixed}
+.recon thead tr:first-child th:first-child{width:150px}
+.recon td:first-child{white-space:nowrap}
 .recon tr.daysum td{font-weight:900;background:#FFF3EE}
 .recon tr.grand td{font-weight:900;background:var(--mist)}
 .recon tr.hqrow td{border-bottom:3px double var(--mid)}
@@ -144,6 +148,9 @@ tr.sum td{font-weight:900;background:#FFF4EC}
 /* 分社統計：全寬、四欄等寬置中、不捲動 */
 .tablebox:has(#ovBranch){max-height:none;overflow:visible}
 #ovBranch{table-layout:fixed;font-size:18px}
+#ovBranch th:first-child{width:150px}
+#ovBranch td:first-child{text-align:left!important;padding-left:12px!important}
+#ovBranch th:first-child{text-align:left!important;padding-left:12px!important}
 #ovBranch th,#ovBranch td,#ovBranch th.n,#ovBranch td.n{text-align:center;padding:10px 8px}
 #ovBranch tr.sum td{border-top:2px solid var(--line)}
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--deep);color:#fff;padding:14px 26px;border-radius:14px;font-weight:700;font-size:20px;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:9}
@@ -201,7 +208,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
   <div class="login card">
     <div class="logo">福</div>
     <h1>福利品銷帳系統</h1>
-    <p class="sub muted">115 年度・v3</p>
+    <p class="sub muted">115 年度・v4</p>
     <div class="field"><span>單位</span>
       <select id="lgBranch"></select>
     </div>
@@ -339,7 +346,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
       </div>
     </div>
   </div>
-  <footer>福利品銷帳系統・v3</footer>
+  <footer>福利品銷帳系統・v4</footer>
 </section>
 
 <div id="printArea"></div>
@@ -349,7 +356,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
 <script>
 const SUPABASE_URL = 'https://euzcnkxxqwvkzutopwau.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_iW5bLz3gFFVvCP6MLTRIww_YZTOkNGb';
-const APP_VER = '3';
+const APP_VER = '4';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true }   // 關掉分頁／瀏覽器就要重新登入
 });
