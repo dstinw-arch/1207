@@ -130,14 +130,15 @@ tr.sum td{font-weight:900;background:#FFF4EC}
 .recon th .sm{display:block;font-weight:400;font-size:13px}
 /* 首欄（分社／日期）固定窄寬，數字欄緊跟在旁邊 */
 .recon{table-layout:fixed}
-.recon thead tr:first-child th:first-child{width:150px}
-.recon td:first-child{white-space:nowrap}
+.recon thead tr:first-child th:first-child{width:190px}
+.recon td:first-child{white-space:nowrap;overflow-wrap:anywhere}
 .recon tr.daysum td{font-weight:900;background:#FFF3EE}
 .recon tr.grand td{font-weight:900;background:var(--mist)}
 .recon tr.hqrow td{border-bottom:3px double var(--mid)}
 .recon tr.split td{font-weight:700;background:#FFF4EC;border-top:3px double var(--mid)}
 .recon tr.subsum td{font-weight:900;background:#FFF3EE;color:#7A3418}
-.recon tr.split td:first-child,.recon tr.subsum td:first-child,.recon tr.grand td:first-child{white-space:nowrap}
+.recon tr.split td:first-child,.recon tr.subsum td:first-child,.recon tr.grand td:first-child,.recon tr.daysum td:first-child{white-space:normal;line-height:1.35}
+.recon td:first-child .tag{display:inline-block;margin-top:3px}
 @media print{.recon tr.subsum td{background:#fff!important;color:#000!important;border-top:2px solid #000;border-bottom:2px solid #000}}
 .recon td.click{cursor:pointer;color:var(--mid);text-decoration:underline}
 .dayhead{font-size:20px;font-weight:900;color:var(--deep);margin:20px 0 8px}
@@ -208,7 +209,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
   <div class="login card">
     <div class="logo">福</div>
     <h1>福利品銷帳系統</h1>
-    <p class="sub muted">115 年度・v4</p>
+    <p class="sub muted">115 年度・v5</p>
     <div class="field"><span>單位</span>
       <select id="lgBranch"></select>
     </div>
@@ -346,7 +347,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
       </div>
     </div>
   </div>
-  <footer>福利品銷帳系統・v4</footer>
+  <footer>福利品銷帳系統・v5</footer>
 </section>
 
 <div id="printArea"></div>
@@ -356,7 +357,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
 <script>
 const SUPABASE_URL = 'https://euzcnkxxqwvkzutopwau.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_iW5bLz3gFFVvCP6MLTRIww_YZTOkNGb';
-const APP_VER = '4';
+const APP_VER = '5';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true }   // 關掉分頁／瀏覽器就要重新登入
 });
@@ -914,9 +915,10 @@ function reconHtml(){
   const sumOver = (ds, list, label) => addUp(ds.flatMap(d => list.map(b => rowFor(d,b))), label);
   // 三行彙總：總社 / 分社小計（總分社往來）/ 全社合計
   const splitRows = (ds, prefix='') => {
-    const hq  = sumOver(ds, [HQ], `${prefix}總社 0016 營業部`);
-    const sub = sumOver(ds, SUBS, `${prefix}分社小計 0025–0168　<span class="tag pend">總分社往來</span>`);
-    const all = sumOver(ds, BRANCHES, `${prefix}全社合計 0016–0168`);
+    const pf = prefix ? `<span style="color:var(--ink2);font-weight:700">${prefix.trim()}</span><br>` : '';
+    const hq  = sumOver(ds, [HQ], `${pf}總社 0016 營業部`);
+    const sub = sumOver(ds, SUBS, `${pf}分社小計 0025–0168　<span class="tag pend">總分社往來</span>`);
+    const all = sumOver(ds, BRANCHES, `${pf}全社合計 0016–0168`);
     return reconRow(hq,'split') + reconRow(sub,'subsum') + reconRow(all,'grand');
   };
   const table = (head, body) => `<div class="tablebox" style="max-height:none"><table class="recon">${reconHead(head)}<tbody>${body}</tbody></table></div>`;
