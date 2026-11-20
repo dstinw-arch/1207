@@ -148,11 +148,19 @@ tr.sum td{font-weight:900;background:#FFF4EC}
 
 /* 分社統計：全寬、四欄等寬置中、不捲動 */
 .tablebox:has(#ovBranch){max-height:none;overflow:visible}
-#ovBranch{table-layout:fixed;font-size:18px}
-#ovBranch th:first-child{width:150px}
+#ovBranch{table-layout:fixed;font-size:16px}
+#ovBranch thead tr:first-child th:first-child{width:140px}
 #ovBranch td:first-child{text-align:left!important;padding-left:12px!important}
-#ovBranch th:first-child{text-align:left!important;padding-left:12px!important}
-#ovBranch th,#ovBranch td,#ovBranch th.n,#ovBranch td.n{text-align:center;padding:10px 8px}
+#ovBranch thead tr:first-child th:first-child{text-align:left!important;padding-left:12px!important}
+#ovBranch th,#ovBranch td,#ovBranch th.n,#ovBranch td.n{text-align:center;padding:9px 4px}
+#ovBranch .g{border-left:2px solid var(--line)}
+#ovBranch td.left{font-weight:900;color:var(--deep)}
+#ovBranch td.neg{color:var(--bad);font-weight:900}
+#ovBranch th .sm{display:block;font-weight:400;font-size:12px}
+#stockTable input{width:110px;text-align:right;padding:6px 10px}
+.tform{display:grid;grid-template-columns:repeat(6,auto);gap:10px;align-items:end}
+.tform .field{margin:0}
+@media (max-width:900px){.tform{grid-template-columns:1fr 1fr}}
 #ovBranch tr.sum td{border-top:2px solid var(--line)}
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--deep);color:#fff;padding:14px 26px;border-radius:14px;font-weight:700;font-size:20px;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:9}
 .toast.bad{background:var(--bad)}
@@ -209,7 +217,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
   <div class="login card">
     <div class="logo">福</div>
     <h1>福利品銷帳系統</h1>
-    <p class="sub muted">115 年度・v5</p>
+    <p class="sub muted">115 年度・v6</p>
     <div class="field"><span>單位</span>
       <select id="lgBranch"></select>
     </div>
@@ -285,6 +293,28 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
       </div>
     </div>
 
+    <!-- 管理員：庫存調撥 -->
+    <div id="tab-stock" class="hidden">
+      <div class="card">
+        <h2>登記分社間調撥</h2>
+        <div class="tform">
+          <label class="field"><span>品項</span><select id="tfItem"><option value="det">洗衣精</option><option value="oil">葵花油</option></select></label>
+          <label class="field"><span>撥出分社</span><select id="tfFrom"></select></label>
+          <label class="field"><span>調入分社</span><select id="tfTo"></select></label>
+          <label class="field"><span>數量</span><input type="text" id="tfQty" inputmode="numeric" style="width:90px"></label>
+          <label class="field"><span>日期</span><input type="date" id="tfDate"></label>
+          <button class="btn btn-clay" id="tfBtn">登記調撥</button>
+        </div>
+        <label class="field" style="margin-top:10px"><span>備註（選填）</span><input type="text" id="tfNote" placeholder="例：林口庫存不足，由五股支援"></label>
+        <div class="tablebox" style="margin-top:14px;max-height:none"><table id="tfTable"></table></div>
+      </div>
+      <div class="card">
+        <h2>原始庫存（到貨數量）</h2>
+        <div class="muted" style="margin-bottom:10px">數量有誤時可直接修改後按「儲存」。</div>
+        <div class="tablebox" style="max-height:none;width:fit-content;max-width:100%"><table id="stockTable"></table></div>
+      </div>
+    </div>
+
     <!-- 管理員：帳號管理 -->
     <div id="tab-acct" class="hidden">
       <div class="card">
@@ -347,7 +377,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
       </div>
     </div>
   </div>
-  <footer>福利品銷帳系統・v5</footer>
+  <footer>福利品銷帳系統・v6</footer>
 </section>
 
 <div id="printArea"></div>
@@ -357,7 +387,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
 <script>
 const SUPABASE_URL = 'https://euzcnkxxqwvkzutopwau.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_iW5bLz3gFFVvCP6MLTRIww_YZTOkNGb';
-const APP_VER = '5';
+const APP_VER = '6';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true }   // 關掉分頁／瀏覽器就要重新登入
 });
@@ -394,8 +424,7 @@ const kindLabel = k => `${KIND[k].name}・${KIND[k].items.join('＋')}`;
 // 由 A/B 人數算各品項份數
 const itemsOf = (nA, nB) => ({ alm: nA+nB, det: nA+nB, oil: nA });
 const itemKpis = (nA, nB, tail='') => { const t = itemsOf(nA, nB);
-  return `<div class="kpi kalm"><div class="k">農民曆${tail}</div><div class="v">${money(t.alm)} <span style="font-size:20px">本</span></div></div>
-    <div class="kpi kdet"><div class="k">洗衣精${tail}</div><div class="v">${money(t.det)} <span style="font-size:20px">份</span></div></div>
+  return `<div class="kpi kdet"><div class="k">洗衣精${tail}</div><div class="v">${money(t.det)} <span style="font-size:20px">份</span></div></div>
     <div class="kpi koil"><div class="k">葵花油${tail}</div><div class="v">${money(t.oil)} <span style="font-size:20px">份</span></div></div>`; };
 function tw(ts){ // 民國日期時間
   const d = new Date(ts);
@@ -454,7 +483,7 @@ async function enter(){
   $('mainView').classList.remove('hidden');
   $('whoBadge').textContent = ME.is_admin ? '管理員' : `${ME.branch_code} ${ME.branch_name}`;
   const tabs = ME.is_admin
-    ? [['overview','發放總覽'],['recon','每日對帳'],['claims','銷帳明細'],['reprint','補發／地址'],['lookup','查詢'],['acct','帳號管理']]
+    ? [['overview','發放總覽'],['recon','每日對帳'],['stock','庫存調撥'],['claims','銷帳明細'],['reprint','補發／地址'],['lookup','查詢'],['acct','帳號管理']]
     : [['lookup','查詢銷帳'],['day','本社日報'],['reprint','補發／地址']];
   $('tabs').innerHTML = tabs.map(([k,n]) => `<button data-tab="${k}">${n}</button>`).join('');
   $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
@@ -468,11 +497,11 @@ function showLogin(){
 $('logoutBtn').onclick = async () => { await sb.auth.signOut(); $('qResult').innerHTML=''; showLogin(); };
 
 function showTab(k){
-  ['lookup','day','overview','recon','claims','reprint','acct'].forEach(t => $('tab-'+t).classList.toggle('hidden', t!==k));
+  ['lookup','day','overview','recon','stock','claims','reprint','acct'].forEach(t => $('tab-'+t).classList.toggle('hidden', t!==k));
   $('tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab===k));
   if (k==='lookup') { updateBackfillBanner(); setTimeout(()=>$('qNo').focus(), 50); }
   if (k==='day') { loadDay(); loadSummary(); }
-  if (k==='overview' || k==='claims' || k==='recon') loadAdmin();
+  if (k==='overview' || k==='claims' || k==='recon' || k==='stock') loadAdmin();
   if (k==='reprint') loadReprints();
   if (k==='acct') loadAccounts();
 }
@@ -848,15 +877,15 @@ $('dayPrint').onclick = () => {
 const PERIOD = ['2026-12-07','2026-12-08','2026-12-09','2026-12-10','2026-12-11',
                 '2026-12-14','2026-12-15','2026-12-16','2026-12-17','2026-12-18'];
 const shortDay = k => { const [y,m,d]=k.split('-'); const w='日一二三四五六'[new Date(k+'T12:00:00+08:00').getDay()]; return `${+m}/${+d}（${w}）`; };
-const reconHead = first => `<thead><tr><th rowspan="2">${first}</th><th colspan="3" class="g">領取人數</th><th colspan="3" class="g">發出品項（份）</th></tr>
+const reconHead = first => `<thead><tr><th rowspan="2">${first}</th><th colspan="3" class="g">領取人數</th><th colspan="2" class="g">發出品項（份）</th></tr>
   <tr><th class="g">A 組<span class="sm">含葵花油</span></th><th>B 組<span class="sm">不含葵花油</span></th><th>合計</th>
-  <th class="g">農民曆</th><th>洗衣精</th><th>葵花油</th></tr></thead>`;
+  <th class="g">洗衣精</th><th>葵花油</th></tr></thead>`;
 // r = {label, nA, nB}
 const reconRow = (r, cls='', tdAttr='') => {
   const t = itemsOf(r.nA, r.nB);
   return `<tr class="${cls}"><td ${tdAttr}>${r.label}</td>
     <td class="g">${money(r.nA)}</td><td>${money(r.nB)}</td><td>${money(r.nA+r.nB)}</td>
-    <td class="g">${money(t.alm)}</td><td>${money(t.det)}</td><td>${money(t.oil)}</td></tr>`;
+    <td class="g">${money(t.det)}</td><td>${money(t.oil)}</td></tr>`;
 };
 const addUp = (rows, label) => rows.reduce((a,r)=>({label, nA:a.nA+r.nA, nB:a.nB+r.nB}), {label,nA:0,nB:0});
 const allDays = extra => [...new Set([...PERIOD, ...extra])].sort();
@@ -949,8 +978,8 @@ function reconHtml(){
 $('rcReload').onclick = loadAdmin;
 $('rcCsv').onclick = () => {
   const { days, get } = reconData();
-  const rows = [['日期','分社代號','分社','A組人數(含葵花油)','B組人數','合計人數','農民曆','洗衣精','葵花油']];
-  const line = (d, code, name, a, b) => rows.push([rocDate(d), code, name, a, b, a+b, a+b, a+b, a]);
+  const rows = [['日期','分社代號','分社','A組人數(含葵花油)','B組人數','合計人數','洗衣精','葵花油']];
+  const line = (d, code, name, a, b) => rows.push([rocDate(d), code, name, a, b, a+b, a+b, a]);
   const sumLine = (d, list, code, name) => { let x=0,y=0; list.forEach(([c]) => { x+=get(d,c,'A'); y+=get(d,c,'B'); }); line(d, code, name, x, y); };
   days.forEach(d => { BRANCHES.forEach(([c,n]) => line(d, c, n, get(d,c,'A'), get(d,c,'B')));
     sumLine(d, BRANCHES.slice(0,1), '0016', '總社小計');
@@ -998,7 +1027,7 @@ async function loadAdmin(){
   if (!ME || !ME.is_admin) return;
   try { ADMIN_DATA = await rpc('gift_admin_all'); } catch(e){ toast(e.message, true); return; }
   $('ovTime').textContent = `更新於 ${tw(Date.now())}・每分鐘自動更新`;
-  renderOverview(); renderClaims(); renderRecon();
+  renderOverview(); renderClaims(); renderRecon(); renderStock();
 }
 function renderOverview(){
   const al = ADMIN_DATA.alerts || [];
@@ -1028,28 +1057,98 @@ function renderOverview(){
 }
 $('ovDay').onchange = renderBranchTable;
 $('ovReload').onclick = loadAdmin;
+// 各分社：領取人數（選定日期或累計）＋庫存（截至選定日期／目前）
 function branchRows(){
   const day = $('ovDay').value;
-  const list = ADMIN_DATA.claims.filter(c => !day || (c.biz_date || twDateKey(c.claimed_at)) === day);
+  const dayOf = c => (c.biz_date || twDateKey(c.claimed_at));
+  const list = ADMIN_DATA.claims.filter(c => !day || dayOf(c) === day);
+  const upto = ADMIN_DATA.claims.filter(c => !day || dayOf(c) <= day);
+  const tr = (ADMIN_DATA.transfers || []).filter(t => !day || t.biz_date <= day);
+  const stock = Object.fromEntries((ADMIN_DATA.stock || []).map(s => [s.branch_code, s]));
   return BRANCHES.map(([code,name]) => {
     const c = list.filter(x => x.branch_code === code);
     const nA = c.filter(x=>x.kind==='A').length, nB = c.filter(x=>x.kind==='B').length;
-    return { code, name, nA, nB, cnt:c.length, ...itemsOf(nA, nB) };
+    const u = upto.filter(x => x.branch_code === code);
+    const st = stock[code] || {det:0, oil:0};
+    const tin  = it => tr.filter(t => t.item===it && t.to_branch===code).reduce((s,t)=>s+t.qty,0);
+    const tout = it => tr.filter(t => t.item===it && t.from_branch===code).reduce((s,t)=>s+t.qty,0);
+    const det = { orig: st.det, tin: tin('det'), tout: tout('det'), used: u.length };
+    const oil = { orig: st.oil, tin: tin('oil'), tout: tout('oil'), used: u.filter(x=>x.kind==='A').length };
+    [det, oil].forEach(o => o.left = o.orig + o.tin - o.tout - o.used);
+    return { code, name, nA, nB, cnt:c.length, det, oil };
   });
 }
 function renderBranchTable(){
-  const rows = branchRows();
-  const s = k => rows.reduce((a,r)=>a+r[k],0);
-  const cells = r => `<td class="n">${money(r.nA)}</td><td class="n">${money(r.nB)}</td><td class="n">${money(r.cnt)}</td>`;
-  $('ovBranch').innerHTML = `<thead><tr><th>分社</th><th class="n">A 組人數（含葵花油）</th><th class="n">B 組人數</th><th class="n">合計人數</th></tr></thead><tbody>`
+  const rows = branchRows(), day = $('ovDay').value;
+  const sum = k => rows.reduce((a,r)=>a+r[k],0);
+  const sumI = (it,k) => rows.reduce((a,r)=>a+r[it][k],0);
+  const tot = { nA:sum('nA'), nB:sum('nB'), cnt:sum('cnt'),
+    det:{orig:sumI('det','orig'),tin:sumI('det','tin'),tout:sumI('det','tout'),used:sumI('det','used'),left:sumI('det','left')},
+    oil:{orig:sumI('oil','orig'),tin:sumI('oil','tin'),tout:sumI('oil','tout'),used:sumI('oil','used'),left:sumI('oil','left')} };
+  const stk = o => `<td class="g">${money(o.orig)}</td><td>${o.tin?money(o.tin):'－'}</td><td>${o.tout?money(o.tout):'－'}</td><td>${money(o.used)}</td><td class="${o.left<0?'neg':'left'}">${money(o.left)}</td>`;
+  const cells = r => `<td class="n g">${money(r.nA)}</td><td class="n">${money(r.nB)}</td><td class="n">${money(r.cnt)}</td>${stk(r.det)}${stk(r.oil)}`;
+  const sub = ['原始','調入','撥出','已發','剩餘'];
+  $('ovBranch').innerHTML = `<thead><tr><th rowspan="2">分社</th><th colspan="3" class="g">領取人數<span class="sm">${day?rocDate(day):'累計'}</span></th>
+      <th colspan="5" class="g">洗衣精庫存<span class="sm">截至${day?'當日':'目前'}</span></th><th colspan="5" class="g">葵花油庫存<span class="sm">截至${day?'當日':'目前'}</span></th></tr>
+    <tr><th class="g">A 組</th><th>B 組</th><th>合計</th>${[0,1].map(()=>sub.map((s,i)=>`<th${i?'':' class="g"'}>${s}</th>`).join('')).join('')}</tr></thead><tbody>`
     + rows.map(r => `<tr><td>${r.code} ${r.name}</td>${cells(r)}</tr>`).join('')
-    + `<tr class="sum"><td>合計</td>${cells({nA:s('nA'),nB:s('nB'),cnt:s('cnt')})}</tr></tbody>`;
+    + `<tr class="sum"><td>合計</td>${cells(tot)}</tr></tbody>`;
 }
 $('ovCsvBranch').onclick = () => {
   const day = $('ovDay').value, rows = branchRows();
-  csvDownload(`福利品分社統計_${day||'累計'}.csv`, [['分社代號','分社','A組人數(含葵花油)','B組人數','合計人數'],
-    ...rows.map(r=>[r.code,r.name,r.nA,r.nB,r.cnt])]);
+  const it = o => [o.orig, o.tin, o.tout, o.used, o.left];
+  csvDownload(`福利品分社統計_${day||'累計'}.csv`, [['分社代號','分社','A組人數(含葵花油)','B組人數','合計人數',
+      '洗衣精原始','洗衣精調入','洗衣精撥出','洗衣精已發','洗衣精剩餘','葵花油原始','葵花油調入','葵花油撥出','葵花油已發','葵花油剩餘'],
+    ...rows.map(r=>[r.code,r.name,r.nA,r.nB,r.cnt,...it(r.det),...it(r.oil)])]);
 };
+
+/* ---------- 庫存調撥（管理員） ---------- */
+const brName = c => { const b = BRANCHES.find(x => x[0]===c); return b ? `${b[0]} ${b[1]}` : c; };
+const ITEM_NAME = { det:'洗衣精', oil:'葵花油' };
+(function initTransferForm(){
+  const opts = BRANCHES.map(([c,n]) => `<option value="${c}">${c} ${n}</option>`).join('');
+  $('tfFrom').innerHTML = opts; $('tfTo').innerHTML = opts; $('tfTo').selectedIndex = 1;
+  $('tfDate').value = todayKey();
+})();
+$('tfBtn').onclick = async () => {
+  const qty = parseInt($('tfQty').value.replace(/\D/g,''), 10);
+  if (!qty) { toast('請輸入數量', true); return; }
+  if ($('tfFrom').value === $('tfTo').value) { toast('撥出和調入不能是同一個分社', true); return; }
+  const msg = `${ITEM_NAME[$('tfItem').value]} ${qty} 份\n${brName($('tfFrom').value)} → ${brName($('tfTo').value)}\n確定登記？`;
+  if (!confirm(msg)) return;
+  try { await rpc('gift_transfer_add', { p_item: $('tfItem').value, p_from: $('tfFrom').value, p_to: $('tfTo').value,
+          p_qty: qty, p_date: $('tfDate').value || todayKey(), p_note: $('tfNote').value });
+    toast('已登記調撥'); $('tfQty').value = ''; $('tfNote').value = ''; loadAdmin(); }
+  catch(e){ toast(e.message, true); }
+};
+function renderStock(){
+  if (!ADMIN_DATA) return;
+  const T = ADMIN_DATA.transfers || [];
+  $('tfTable').innerHTML = `<thead><tr><th>日期</th><th>品項</th><th>撥出分社</th><th>調入分社</th><th class="n">數量</th><th>備註</th><th></th></tr></thead><tbody>`
+    + (T.length ? T.map(t => `<tr><td>${rocDate(t.biz_date)}</td><td>${ITEM_NAME[t.item]}</td><td>${esc(brName(t.from_branch))}</td><td>${esc(brName(t.to_branch))}</td>
+        <td class="n">${money(t.qty)}</td><td>${esc(t.note||'')}</td>
+        <td><button class="btn btn-soft" style="font-size:15px;padding:4px 10px" data-tfcancel="${t.id}">取消</button></td></tr>`).join('')
+      : `<tr><td colspan="7" class="muted">尚無調撥紀錄</td></tr>`) + `</tbody>`;
+  $('tfTable').querySelectorAll('[data-tfcancel]').forEach(b => b.onclick = async () => {
+    if (!confirm('確定取消這筆調撥？')) return;
+    try { await rpc('gift_transfer_cancel', { p_id: +b.dataset.tfcancel }); toast('已取消'); loadAdmin(); } catch(e){ toast(e.message, true); }
+  });
+  const S = ADMIN_DATA.stock || [];
+  const tot = k => S.reduce((a,s)=>a+s[k],0);
+  $('stockTable').innerHTML = `<thead><tr><th>分社</th><th class="n">洗衣精</th><th class="n">葵花油</th><th></th></tr></thead><tbody>`
+    + S.map(s => `<tr><td>${esc(brName(s.branch_code))}</td>
+        <td class="n"><input type="text" inputmode="numeric" value="${s.det}" data-sdet="${s.branch_code}"></td>
+        <td class="n"><input type="text" inputmode="numeric" value="${s.oil}" data-soil="${s.branch_code}"></td>
+        <td><button class="btn btn-soft" style="font-size:15px;padding:4px 12px" data-ssave="${s.branch_code}">儲存</button></td></tr>`).join('')
+    + `<tr class="sum"><td>合計</td><td class="n">${money(tot('det'))}</td><td class="n">${money(tot('oil'))}</td><td></td></tr></tbody>`;
+  $('stockTable').querySelectorAll('[data-ssave]').forEach(b => b.onclick = async () => {
+    const c = b.dataset.ssave;
+    const det = parseInt($('stockTable').querySelector(`[data-sdet="${c}"]`).value.replace(/\D/g,'') || '0', 10);
+    const oil = parseInt($('stockTable').querySelector(`[data-soil="${c}"]`).value.replace(/\D/g,'') || '0', 10);
+    if (!confirm(`${brName(c)} 原始庫存改為：洗衣精 ${det}、葵花油 ${oil}？`)) return;
+    try { await rpc('gift_stock_set', { p_branch: c, p_det: det, p_oil: oil }); toast('已儲存'); loadAdmin(); } catch(e){ toast(e.message, true); }
+  });
+}
 
 $('clBranch').innerHTML = `<option value="">全部分社</option>` + BRANCHES.map(([c,n]) => `<option value="${c}">${c} ${n}</option>`).join('');
 ['clFilter','clBranch','clAmt'].forEach(id => $(id).oninput = renderClaims);
