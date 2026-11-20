@@ -1023,15 +1023,15 @@ function branchRows(){
 function renderBranchTable(){
   const rows = branchRows();
   const s = k => rows.reduce((a,r)=>a+r[k],0);
-  const cells = r => `<td class="n">${money(r.nA)}</td><td class="n">${money(r.nB)}</td><td class="n">${money(r.cnt)}</td><td class="n">${money(r.alm)}</td><td class="n">${money(r.det)}</td><td class="n">${money(r.oil)}</td>`;
-  $('ovBranch').innerHTML = `<thead><tr><th>分社</th><th class="n">A 組人數</th><th class="n">B 組人數</th><th class="n">合計人數</th><th class="n">農民曆</th><th class="n">洗衣精</th><th class="n">葵花油</th></tr></thead><tbody>`
+  const cells = r => `<td class="n">${money(r.nA)}</td><td class="n">${money(r.nB)}</td><td class="n">${money(r.cnt)}</td>`;
+  $('ovBranch').innerHTML = `<thead><tr><th>分社</th><th class="n">A 組人數（含葵花油）</th><th class="n">B 組人數</th><th class="n">合計人數</th></tr></thead><tbody>`
     + rows.map(r => `<tr><td>${r.code} ${r.name}</td>${cells(r)}</tr>`).join('')
-    + `<tr class="sum"><td>合計</td>${cells({nA:s('nA'),nB:s('nB'),cnt:s('cnt'),alm:s('alm'),det:s('det'),oil:s('oil')})}</tr></tbody>`;
+    + `<tr class="sum"><td>合計</td>${cells({nA:s('nA'),nB:s('nB'),cnt:s('cnt')})}</tr></tbody>`;
 }
 $('ovCsvBranch').onclick = () => {
   const day = $('ovDay').value, rows = branchRows();
-  csvDownload(`福利品分社統計_${day||'累計'}.csv`, [['分社代號','分社','A組人數(含葵花油)','B組人數','合計人數','農民曆','洗衣精','葵花油'],
-    ...rows.map(r=>[r.code,r.name,r.nA,r.nB,r.cnt,r.alm,r.det,r.oil])]);
+  csvDownload(`福利品分社統計_${day||'累計'}.csv`, [['分社代號','分社','A組人數(含葵花油)','B組人數','合計人數'],
+    ...rows.map(r=>[r.code,r.name,r.nA,r.nB,r.cnt])]);
 };
 
 $('clBranch').innerHTML = `<option value="">全部分社</option>` + BRANCHES.map(([c,n]) => `<option value="${c}">${c} ${n}</option>`).join('');
