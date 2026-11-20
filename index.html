@@ -124,7 +124,10 @@ tr.sum td{font-weight:900;background:#FFF4EC}
 .recon th,.recon td{text-align:right;font-variant-numeric:tabular-nums}
 .recon th:first-child,.recon td:first-child{text-align:left}
 .recon .g{border-left:2px solid var(--line)}
-.recon thead tr:first-child th{text-align:center}
+.recon thead th,.recon thead tr:first-child th{text-align:center!important}   /* 表頭一律置中（第二列第一格不再被當成首欄靠左） */
+.recon td{text-align:center}
+.recon td:first-child{text-align:left}
+.recon th .sm{display:block;font-weight:400;font-size:13px}
 .recon tr.daysum td{font-weight:900;background:#FFF3EE}
 .recon tr.grand td{font-weight:900;background:var(--mist)}
 .recon tr.hqrow td{border-bottom:3px double var(--mid)}
@@ -198,7 +201,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
   <div class="login card">
     <div class="logo">福</div>
     <h1>福利品銷帳系統</h1>
-    <p class="sub muted">115 年度・v2</p>
+    <p class="sub muted">115 年度・v3</p>
     <div class="field"><span>單位</span>
       <select id="lgBranch"></select>
     </div>
@@ -336,7 +339,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
       </div>
     </div>
   </div>
-  <footer>福利品銷帳系統・v2</footer>
+  <footer>福利品銷帳系統・v3</footer>
 </section>
 
 <div id="printArea"></div>
@@ -346,7 +349,7 @@ footer{text-align:center;color:var(--ink2);font-size:15px;padding:30px 0}
 <script>
 const SUPABASE_URL = 'https://euzcnkxxqwvkzutopwau.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_iW5bLz3gFFVvCP6MLTRIww_YZTOkNGb';
-const APP_VER = '2';
+const APP_VER = '3';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true }   // 關掉分頁／瀏覽器就要重新登入
 });
@@ -838,7 +841,7 @@ const PERIOD = ['2026-12-07','2026-12-08','2026-12-09','2026-12-10','2026-12-11'
                 '2026-12-14','2026-12-15','2026-12-16','2026-12-17','2026-12-18'];
 const shortDay = k => { const [y,m,d]=k.split('-'); const w='日一二三四五六'[new Date(k+'T12:00:00+08:00').getDay()]; return `${+m}/${+d}（${w}）`; };
 const reconHead = first => `<thead><tr><th rowspan="2">${first}</th><th colspan="3" class="g">領取人數</th><th colspan="3" class="g">發出品項（份）</th></tr>
-  <tr><th class="g">A 組<br><span style="font-weight:400;font-size:13px">含葵花油</span></th><th>B 組<br><span style="font-weight:400;font-size:13px">不含葵花油</span></th><th>合計</th>
+  <tr><th class="g">A 組<span class="sm">含葵花油</span></th><th>B 組<span class="sm">不含葵花油</span></th><th>合計</th>
   <th class="g">農民曆</th><th>洗衣精</th><th>葵花油</th></tr></thead>`;
 // r = {label, nA, nB}
 const reconRow = (r, cls='', tdAttr='') => {
